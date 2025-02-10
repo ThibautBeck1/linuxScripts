@@ -1,0 +1,31 @@
+check_url() {
+  local url="$1"
+  if curl -s --head "$url" > /dev/null 2>&1; then
+    echo "✔ | $url"
+  else
+    echo "✘ | $url"
+  fi
+}
+
+# Baseline URL
+check_url "http://www.google.com"
+
+# Loop door de .snb zonebestanden
+find /var/named -maxdepth 1 -name "*.snb" -print0 | while IFS= read -r -d $'\0' zonefile; do
+  # Haal de domeinnaam uit de bestandsnaam (inclusief .snb)
+  domain=$(basename "$zonefile")
+
+  # Check of de bestandsnaam eindigt op '.snb'
+  if [[ "$domain" == *.snb ]]; then
+      # Verwijder .snb om het root domein te krijgen
+      domain_root=${domain%.snb}
+      # Vorm de URL
+      url="http://www.$domain_root.snb"
+      # Controleer de beschikbaarheid
+      check_url "$url"
+  fi
+done
+
+# Instructie voor watch (uit te voeren op de command line)
+# watch -n 10 /pad/naar/je/script.sh
+
